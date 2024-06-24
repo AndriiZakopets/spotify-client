@@ -35,8 +35,8 @@ passport.use(
             profile.accessToken = accessToken; // Store accessToken in profile
             profile.refreshToken = refreshToken; // Store refreshToken in profile
             return done(null, profile);
-        }
-    )
+        },
+    ),
 );
 
 const app = express();
@@ -51,7 +51,7 @@ app.use(
         resave: false,
         saveUninitialized: false,
         store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-    })
+    }),
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -75,7 +75,10 @@ const fetchAllPaginatedResults = async (spotifyApiMethod, options = {}) => {
             const data = await spotifyApiMethod({ offset, limit });
             return data.body;
         } catch (error) {
-            console.error(`Error fetching results with offset ${offset}:`, error);
+            console.error(
+                `Error fetching results with offset ${offset}:`,
+                error,
+            );
             return { items: [] }; // Return empty items array on error
         }
     };
@@ -102,7 +105,7 @@ const fetchAllPaginatedResults = async (spotifyApiMethod, options = {}) => {
     const responses = await Promise.all(requests);
 
     // Collect items from all responses
-    responses.forEach(response => {
+    responses.forEach((response) => {
         results = results.concat(response.items || []);
     });
 
@@ -116,12 +119,15 @@ app.get('/account', ensureAuthenticated, async function (req, res) {
 
     try {
         // Fetch all liked songs using the helper function
-        const tracks = await fetchAllPaginatedResults(spotifyApi.getMySavedTracks.bind(spotifyApi), { limit: 50 });
+        const tracks = await fetchAllPaginatedResults(
+            spotifyApi.getMySavedTracks.bind(spotifyApi),
+            { limit: 50 },
+        );
 
         // Group songs by release year
         const songsByYear = {};
 
-        tracks.forEach(item => {
+        tracks.forEach((item) => {
             const track = item.track;
             const releaseYear = track.album.release_date.slice(0, 4); // Extract the year part
 
@@ -131,10 +137,16 @@ app.get('/account', ensureAuthenticated, async function (req, res) {
             songsByYear[releaseYear].push(track.name);
         });
 
-        res.render('account.html', { user: req.user, songsByYear: JSON.stringify(songsByYear) });
+        res.render('account.html', {
+            user: req.user,
+            songsByYear: JSON.stringify(songsByYear),
+        });
     } catch (err) {
         console.error('Error fetching liked songs:', err);
-        res.render('account.html', { user: req.user, error: 'Error fetching liked songs' });
+        res.render('account.html', {
+            user: req.user,
+            error: 'Error fetching liked songs',
+        });
     }
 });
 
@@ -145,14 +157,24 @@ app.get('/login', function (req, res) {
 app.get(
     '/auth/spotify',
     passport.authenticate('spotify', {
-        scope: ['user-read-email', 'user-read-private', 'playlist-read-private', 'playlist-read-collaborative', 'user-library-read'],
+        scope: [
+            'user-read-email',
+            'user-read-private',
+            'playlist-read-private',
+            'playlist-read-collaborative',
+            'user-library-read',
+        ],
         showDialog: true,
-    })
+    }),
 );
 
-app.get(authCallbackPath, passport.authenticate('spotify', { failureRedirect: '/login' }), function (req, res) {
-    res.redirect('/');
-});
+app.get(
+    authCallbackPath,
+    passport.authenticate('spotify', { failureRedirect: '/login' }),
+    function (req, res) {
+        res.redirect('/');
+    },
+);
 
 app.get('/logout', function (req, res) {
     req.logout();

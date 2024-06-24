@@ -1,6 +1,4 @@
 import express from 'express';
-import https from 'https';
-import fs from 'fs';
 
 const app = express();
 const port = 3000;

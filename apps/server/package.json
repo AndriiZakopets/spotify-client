@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+        "dev": "node --inspect -r ts-node/register src/index.ts",
         "build": "tsc",
         "lint": "eslint . --ext .ts"
     },
